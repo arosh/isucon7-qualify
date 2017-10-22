@@ -1,0 +1,7 @@
+venv/
+__pycache__
+nodejs
+go
+ruby
+php
+perl
