@@ -382,7 +382,7 @@ def post_profile():
         if config['db_host'] == 'localhost':
             hosts = ['localhost']
         else:
-            hosts = ['app1481', 'app1482']
+            hosts = ['app1481', 'app1482', 'app1483']
 
         files = {'icon': avatar_data}
         form = {'name': avatar_name}
