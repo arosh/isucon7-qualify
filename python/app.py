@@ -243,21 +243,34 @@ def fetch_unread():
 
     time.sleep(1.0)
 
+    query = '''
+    SELECT
+        id,
+        messages_count as cnt,
+    FROM channel;
+    '''
     cur = dbh().cursor()
-    cur.execute('SELECT id FROM channel')
+    cur.execute(query)
     rows = cur.fetchall()
-    channel_ids = [row['id'] for row in rows]
+    channel_cnt = {row['id']: row['cnt'] for row in rows}
+
+    query = '''
+    SELECT
+        channel_id as id,
+        messages_read
+    JOIN haveread
+    WHERE user_id = %s;
+    '''
+    cur.execute(query, user_id)
+    rows = cur.fetchall()
+    messages_read = {row['id']: row['messages_read'] for row in rows}
 
     res = []
-    for channel_id in channel_ids:
-        cur.execute('SELECT messages_read FROM haveread WHERE user_id = %s AND channel_id = %s', (user_id, channel_id))
-        row = cur.fetchone()
-        cur.execute('SELECT messages_count as cnt FROM channel WHERE id = %s',(channel_id,))
-        if row:
-            total = int(cur.fetchone()['cnt'])
-            count = total - int(row['messages_read'])  # 総数 - 最後に読んだメッセージの総数
+    for channel_id, cnt in channel_cnt.items():
+        if channel_id in messages_read:
+            count = cnt - messages_read['channel_id']  # 総数 - 最後に読んだメッセージの総数
         else:
-            count = int(cur.fetchone()['cnt'])
+            count = cnt
 
         r = {}
         r['channel_id'] = channel_id
