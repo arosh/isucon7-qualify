@@ -15,7 +15,6 @@ sysctl -p
 if [ -e conf/nginx.conf ]; then
   cp conf/nginx.conf /etc/nginx/nginx.conf
 fi
-systemctl restart nginx
 systemctl reload nginx
 
 if [ -e conf/isubata.python.service ]; then
