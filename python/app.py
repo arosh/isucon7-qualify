@@ -268,7 +268,7 @@ def fetch_unread():
     res = []
     for channel_id, cnt in channel_cnt.items():
         if channel_id in messages_read:
-            count = cnt - messages_read['channel_id']  # 総数 - 最後に読んだメッセージの総数
+            count = cnt - messages_read[channel_id]  # 総数 - 最後に読んだメッセージの総数
         else:
             count = cnt
 
