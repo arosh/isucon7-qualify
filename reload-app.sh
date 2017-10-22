@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 now=`date +%Y%m%d-%H%M%S`
-curl -X POST --data-urlencode "payload={\"text\": \"\`\`\`\nRELOAD START!!!!(${now})\n\`\`\`\"}" https://hooks.slack.com/services/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
+curl -X POST --data-urlencode "payload={\"text\": \"\`\`\`\nAPP RELOAD START!!!!(${now})\n\`\`\`\"}" https://hooks.slack.com/services/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
 
 if [ -e /var/log/nginx/access.log ]; then
   mv /var/log/nginx/access.log /var/log/nginx/access.log.$now
@@ -15,6 +15,7 @@ sysctl -p
 if [ -e conf/nginx.conf ]; then
   cp conf/nginx.conf /etc/nginx/nginx.conf
 fi
+systemctl restart nginx
 systemctl reload nginx
 
 if [ -e conf/isubata.python.service ]; then
@@ -25,5 +26,5 @@ systemctl daemon-reload
 systemctl restart isubata.python
 
 now=`date +%Y%m%d-%H%M%S`
-curl -X POST --data-urlencode "payload={\"text\": \"\`\`\`\nRELOAD END!!!!(${now})\n\`\`\`\"}" https://hooks.slack.com/services/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
+curl -X POST --data-urlencode "payload={\"text\": \"\`\`\`\nAPP RELOAD END!!!!(${now})\n\`\`\`\"}" https://hooks.slack.com/services/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
 journalctl -f -u nginx -u isubata.python

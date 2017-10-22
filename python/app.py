@@ -9,11 +9,12 @@ import random
 import string
 import tempfile
 import time
-
+import requests
+import sys
 
 static_folder = pathlib.Path(__file__).resolve().parent.parent / 'public'
 icons_folder = static_folder / 'icons'
-app = flask.Flask(__name__, static_folder=str(static_folder), static_url_path='')
+app = flask.Flask(__name__, static_url_path='')
 app.secret_key = 'tonymoris'
 avatar_max_size = 1 * 1024 * 1024
 
@@ -378,7 +379,16 @@ def post_profile():
                 avatar_data = data
 
     if avatar_name and avatar_data:
-        cur.execute("INSERT INTO image (name, data) VALUES (%s, _binary %s)", (avatar_name, avatar_data))
+        if config['db_host'] == 'localhost':
+            hosts = ['localhost']
+        else:
+            hosts = ['app1481', 'app1482']
+
+        files = {'icon': avatar_data}
+        form = {'name': avatar_name}
+        for host in hosts:
+            requests.post('http://%s/saveicon' % host, files=files, data=form)
+
         cur.execute("UPDATE user SET avatar_icon = %s WHERE id = %s", (avatar_name, user_id))
 
     if display_name:
@@ -386,27 +396,14 @@ def post_profile():
 
     return flask.redirect('/', 303)
 
+@app.route('/saveicon', methods=['POST'])
+def saveicon():
+    name = flask.request.form['name']
+    file = flask.request.files['icon']
+    with open('../public/icons/%s' % (name), 'wb') as f:
+        file.save(f)
 
-def ext2mime(ext):
-    if ext in ('.jpg', '.jpeg'):
-        return 'image/jpeg'
-    if ext == '.png':
-        return 'image/png'
-    if ext == '.gif':
-        return 'image/gif'
-    return ''
-
-
-@app.route('/icons/<file_name>')
-def get_icon(file_name):
-    cur = dbh().cursor()
-    cur.execute("SELECT * FROM image WHERE name = %s", (file_name,))
-    row = cur.fetchone()
-    ext = os.path.splitext(file_name)[1] if '.' in file_name else ''
-    mime = ext2mime(ext)
-    if row and mime:
-        return flask.Response(row['data'], mimetype=mime)
-    flask.abort(404)
+    return 'ok'
 
 
 if __name__ == "__main__":
