@@ -261,7 +261,7 @@ def fetch_unread():
     JOIN haveread
     WHERE user_id = %s
     '''
-    cur.execute(query, (user_id))
+    cur.execute(query, (user_id, ))
     rows = cur.fetchall()
     messages_read = {row['id']: row['messages_read'] for row in rows}
 
