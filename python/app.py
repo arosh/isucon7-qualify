@@ -258,7 +258,7 @@ def fetch_unread():
     SELECT
         channel_id as id,
         messages_read
-    JOIN haveread
+    FROM haveread
     WHERE user_id = %s
     '''
     cur.execute(query, (user_id, ))
