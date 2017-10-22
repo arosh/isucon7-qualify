@@ -14,7 +14,7 @@ import sys
 
 static_folder = pathlib.Path(__file__).resolve().parent.parent / 'public'
 icons_folder = static_folder / 'icons'
-app = flask.Flask(__name__, static_url_path='')
+app = flask.Flask(__name__)
 app.secret_key = 'tonymoris'
 avatar_max_size = 1 * 1024 * 1024
 
