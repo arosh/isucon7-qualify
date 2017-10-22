@@ -22,7 +22,7 @@ if [ -e conf/isubata.python.service ]; then
 fi
 
 systemctl daemon-reload
-systemctl restart isubata.python.python
+systemctl restart isubata.python
 
 now=`date +%Y%m%d-%H%M%S`
 curl -X POST --data-urlencode "payload={\"text\": \"\`\`\`\nRELOAD END!!!!(${now})\n\`\`\`\"}" https://hooks.slack.com/services/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
