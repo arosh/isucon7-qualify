@@ -61,6 +61,13 @@ def get_initialize():
     cur.execute("DELETE FROM channel WHERE id > 10")
     cur.execute("DELETE FROM message WHERE id > 10000")
     cur.execute("DELETE FROM haveread")
+    cur.execute('SELECT id FROM channel')
+    rows = cur.fetchall()
+    channel_ids = [row['id'] for row in rows]
+    for channel_id in channel_ids:
+        cur.execute('SELECT COUNT(*) as cnt FROM message WHERE channel_id = %s', (channel_id,))
+        messages_count = int(cur.fetchone()['cnt'])
+        cur.execute("UPDATE channel SET messages_count = %s WHERE id = %s", (messages_count, channel_id))
     cur.close()
     return ('', 204)
 
@@ -73,6 +80,7 @@ def db_get_user(cur, user_id):
 def db_add_message(cur, channel_id, user_id, content):
     cur.execute("INSERT INTO message (channel_id, user_id, content, created_at) VALUES (%s, %s, %s, NOW())",
                 (channel_id, user_id, content))
+    cur.execute("UPDATE channel SET messages_count = messages_count + 1 WHERE id = %s", (channel_id,))
 
 
 def login_required(func):
@@ -213,10 +221,12 @@ def get_message():
     response.reverse()
 
     max_message_id = max(r['id'] for r in rows) if rows else 0
-    cur.execute('INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at)'
-                ' VALUES (%s, %s, %s, NOW(), NOW())'
-                ' ON DUPLICATE KEY UPDATE message_id = %s, updated_at = NOW()',
-                (user_id, channel_id, max_message_id, max_message_id))
+    cur.execute('SELECT messages_count as cnt FROM channel WHERE id = %s',(channel_id,))
+    total = int(cur.fetchone()['cnt'])
+    cur.execute('INSERT INTO haveread (user_id, channel_id, message_id, updated_at, created_at, messages_read)'
+                ' VALUES (%s, %s, %s, NOW(), NOW(), %s)'
+                ' ON DUPLICATE KEY UPDATE message_id = %s, updated_at = NOW(), messages_read = %s',
+                (user_id, channel_id, max_message_id, total, max_message_id, total))
 
     return flask.jsonify(response)
 
@@ -238,14 +248,16 @@ def fetch_unread():
     for channel_id in channel_ids:
         cur.execute('SELECT * FROM haveread WHERE user_id = %s AND channel_id = %s', (user_id, channel_id))
         row = cur.fetchone()
+        cur.execute('SELECT messages_count as cnt FROM channel WHERE id = %s',(channel_id,))
         if row:
-            cur.execute('SELECT COUNT(*) as cnt FROM message WHERE channel_id = %s AND %s < id',
-                        (channel_id, row['message_id']))
+            total = int(cur.fetchone()['cnt'])
+            count = total - int(row['messages_read'])  # 総数 - 最後に読んだメッセージの総数
         else:
-            cur.execute('SELECT COUNT(*) as cnt FROM message WHERE channel_id = %s', (channel_id,))
+            count = int(cur.fetchone()['cnt'])
+
         r = {}
         r['channel_id'] = channel_id
-        r['unread'] = int(cur.fetchone()['cnt'])
+        r['unread'] = count
         res.append(r)
     return flask.jsonify(res)
 
@@ -262,7 +274,7 @@ def get_history(channel_id):
 
     N = 20
     cur = dbh().cursor()
-    cur.execute("SELECT COUNT(*) as cnt FROM message WHERE channel_id = %s", (channel_id,))
+    cur.execute("SELECT messages_count as cnt FROM channel WHERE id = %s", (channel_id,))
     cnt = int(cur.fetchone()['cnt'])
     max_page = math.ceil(cnt / N)
     if not max_page:
