@@ -335,7 +335,7 @@ def post_add_channel():
     if not name or not description:
         flask.abort(400)
     cur = dbh().cursor()
-    cur.execute("INSERT INTO channel (name, description, updated_at, created_at) VALUES (%s, %s, NOW(), NOW())",
+    cur.execute("INSERT INTO channel (name, description, updated_at, created_at, messages_count) VALUES (%s, %s, NOW(), NOW(), 0)",
                 (name, description))
     channel_id = cur.lastrowid
     return flask.redirect('/channel/' + str(channel_id), 303)
