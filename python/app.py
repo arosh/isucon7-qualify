@@ -246,7 +246,7 @@ def fetch_unread():
     query = '''
     SELECT
         id,
-        messages_count as cnt,
+        messages_count as cnt
     FROM channel;
     '''
     cur = dbh().cursor()
