@@ -207,15 +207,18 @@ def get_message():
     channel_id = int(flask.request.args.get('channel_id'))
     last_message_id = int(flask.request.args.get('last_message_id'))
     cur = dbh().cursor()
-    cur.execute("SELECT * FROM message WHERE id > %s AND channel_id = %s ORDER BY id DESC LIMIT 100",
+    cur.execute("SELECT * FROM message INNER JOIN user ON user.id = message.user_id WHERE message.id > %s AND channel_id = %s ORDER BY message.id DESC LIMIT 100",
                 (last_message_id, channel_id))
     rows = cur.fetchall()
     response = []
     for row in rows:
         r = {}
         r['id'] = row['id']
-        cur.execute("SELECT name, display_name, avatar_icon FROM user WHERE id = %s", (row['user_id'],))
-        r['user'] = cur.fetchone()
+        r['user'] = {
+            'name': row['name'],
+            'display_name': row['display_name'],
+            'avatar_icon': row['avatar_icon']
+        }
         r['date'] = row['created_at'].strftime("%Y/%m/%d %H:%M:%S")
         r['content'] = row['content']
         response.append(r)
@@ -247,7 +250,7 @@ def fetch_unread():
 
     res = []
     for channel_id in channel_ids:
-        cur.execute('SELECT * FROM haveread WHERE user_id = %s AND channel_id = %s', (user_id, channel_id))
+        cur.execute('SELECT messages_read FROM haveread WHERE user_id = %s AND channel_id = %s', (user_id, channel_id))
         row = cur.fetchone()
         cur.execute('SELECT messages_count as cnt FROM channel WHERE id = %s',(channel_id,))
         if row:
@@ -284,16 +287,19 @@ def get_history(channel_id):
     if not 1 <= page <= max_page:
         flask.abort(400)
 
-    cur.execute("SELECT * FROM message WHERE channel_id = %s ORDER BY id DESC LIMIT %s OFFSET %s",
+    cur.execute("SELECT * FROM message INNER JOIN user ON user.id = message.user_id WHERE channel_id = %s ORDER BY message.id DESC LIMIT %s OFFSET %s",
                 (channel_id, N, (page - 1) * N))
     rows = cur.fetchall()
     messages = []
     for row in rows:
         r = {}
         r['id'] = row['id']
-        cur.execute("SELECT name, display_name, avatar_icon FROM user WHERE id = %s", (row['user_id'],))
-        r['user'] = cur.fetchone()
-        r['date'] = row['created_at'].strftime("%Y/%m/%d %H:%M:%S")
+        r['user'] = {
+            'name': row['name'],
+            'display_name': row['display_name'],
+            'avatar_icon': row['avatar_icon']
+        }
+        r['date'] = row['message.created_at'].strftime("%Y/%m/%d %H:%M:%S")
         r['content'] = row['content']
         messages.append(r)
     messages.reverse()
