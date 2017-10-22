@@ -299,7 +299,6 @@ def get_history(channel_id):
             'display_name': row['display_name'],
             'avatar_icon': row['avatar_icon']
         }
-        import pdb; pdb.set_trace()
         r['date'] = row['created_at'].strftime("%Y/%m/%d %H:%M:%S")
         r['content'] = row['content']
         messages.append(r)
