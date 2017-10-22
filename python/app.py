@@ -247,7 +247,7 @@ def fetch_unread():
     SELECT
         id,
         messages_count as cnt
-    FROM channel;
+    FROM channel
     '''
     cur = dbh().cursor()
     cur.execute(query)
@@ -259,9 +259,9 @@ def fetch_unread():
         channel_id as id,
         messages_read
     JOIN haveread
-    WHERE user_id = %s;
+    WHERE user_id = %s
     '''
-    cur.execute(query, user_id)
+    cur.execute(query, (user_id))
     rows = cur.fetchall()
     messages_read = {row['id']: row['messages_read'] for row in rows}
 
