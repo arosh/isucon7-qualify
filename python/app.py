@@ -388,7 +388,7 @@ def post_profile():
         if config['db_host'] == 'localhost':
             hosts = ['localhost']
         else:
-            hosts = ['app1481', 'app1482']
+            hosts = ['app1481', 'app1482', 'app1483']
 
         files = {'icon': avatar_data}
         form = {'name': avatar_name}
@@ -406,8 +406,10 @@ def post_profile():
 def saveicon():
     name = flask.request.form['name']
     file = flask.request.files['icon']
-    with open('../public/icons/%s' % (name), 'wb') as f:
-        file.save(f)
+    filename = '../public/icons/%s' % (name)
+    if not os.path.exists(filename):
+        with open(filename, 'wb') as f:
+            file.save(f)
 
     return 'ok'
 
