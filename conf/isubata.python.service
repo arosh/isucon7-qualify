@@ -5,7 +5,7 @@ Description = isucon7 qualifier main application in python
 WorkingDirectory=/home/isucon/isubata/webapp/python
 EnvironmentFile=/home/isucon/env.sh
 
-ExecStart = /home/isucon/local/python/bin/gunicorn --workers=2 app:app -b 'unix:/dev/shm/app.sock' -k meinheld.gmeinheld.MeinheldWorker
+ExecStart = /home/isucon/local/python/bin/gunicorn --workers=2 app:app -b 'unix:/dev/shm/app.sock'
 
 Restart   = always
 Type      = simple
